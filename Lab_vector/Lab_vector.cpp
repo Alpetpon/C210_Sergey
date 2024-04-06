@@ -46,6 +46,10 @@ public:
 	MyString(const std::string& s) : str(s) {}
 	const std::string& get() const { return str; }
 	void set(const std::string& s) { str = s; }
+
+	bool operator==(const MyString& other) const {
+		return str == other.str;
+	}
 };
 
 
@@ -631,8 +635,23 @@ int main()
 		//Исключение элемента из списка - remove()
 		//Исключите из списка элемент с определенным значением.
 		//Подумайте: что должно быть перегружено в классе Point?
-		std::list<int> myList = { 1, 2, 3, 4, 5 };
-		myList.remove(3); // Удаляет все вхождения числа 3 из списка
+		std::list<MyString> myList = { MyString("Hello"), MyString("World"), MyString("Hello") };
+
+		// Явное использование оператора == и вызов erase для элементов, которые равны MyString("Hello")
+		for (auto it = myList.begin(); it != myList.end(); ) {
+			if (*it == MyString("Hello")) {
+				it = myList.erase(it);
+			}
+			else {
+				++it;
+			}
+		}
+
+		// Вывод содержимого списка после удаления
+		for (const auto& str : myList) {
+			std::cout << str.get() << " ";
+		}
+		std::cout << std::endl;
 
 
 
