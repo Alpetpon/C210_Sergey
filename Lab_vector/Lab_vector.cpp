@@ -37,7 +37,8 @@ void insertIfNotExists(std::vector<T>& vec, const T& value) {
 	}
 }
 
-
+
+
 class MyString {
 private:
 	std::string str;
@@ -56,27 +57,56 @@ public:
 	Point(int x_val = 0, int y_val = 0) : x(x_val), y(y_val) {}
 
 	// Перегрузка оператора << для вывода элементов типа Point
-		friend std::ostream & operator<<(std::ostream & os, const Point & point) {
+	friend std::ostream& operator<<(std::ostream& os, const Point& point) {
 		os << "(" << point.x << ", " << point.y << ")";
 		return os;
 	}
+
+	// Перегрузка оператора << для вывода элементов типа Point*
+	friend std::ostream& operator<<(std::ostream& os, const Point* point) {
+		os << "(" << point->x << ", " << point->y << ")";
+		return os;
+	}
+
+
+	bool operator<(const Point& other) const {
+		return x < other.x;
+	}
+	
+
+	bool operator==(const Point& other) const {
+		return x == other.x && y == other.y;
+	}
 };
 
-// Перегрузка оператора << для вывода объектов типа Point
-std::ostream & operator<<(std::ostream & os, const Point * point) {
-	os << "x: " << point->x << ", y: " << point->y;
+
+// Перегрузка оператора << для вывода элементов вектора
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
+	os << "{";
+	for (size_t i = 0; i < vec.size(); ++i) {
+		os << vec[i];
+		if (i != vec.size() - 1) {
+			os << ", ";
+		}
+	}
+	os << "}";
 	return os;
 }
 
-
-std::string removeRepeatingSequences(const std::string& str) {
+std::string removeRepeatingSequences(const std::vector<char>& input) {
 	std::string result;
+	if (input.empty()) {
+		return result; // Возвращаем пустую строку, если вектор пустой
+	}
 
-	// Проходим по строке и добавляем в результирующую строку только символы, которые не являются повторяющимися
-	for (size_t i = 0; i < str.size(); ++i) {
-		// Если текущий символ не совпадает с предыдущим или если это первый символ, добавляем его в результат
-		if (i == 0 || str[i] != str[i - 1]) {
-			result += str[i];
+	char prevChar = input[0];
+	result.push_back(prevChar); // Добавляем первый символ в результат
+
+	for (size_t i = 1; i < input.size(); ++i) {
+		if (input[i] != prevChar) {
+			result.push_back(input[i]); // Добавляем символ в результат, если он не равен предыдущему
+			prevChar = input[i]; // Обновляем предыдущий символ
 		}
 	}
 
@@ -95,16 +125,34 @@ void removeDuplicates(std::vector<T>& vec) {
 	vec.erase(last, vec.end());
 }
 
-// Шаблон функции для вывода элементов любого контейнера на печать
 template<typename Container>
-void printContainer(const Container& container, const std::string& containerType) {
-	std::cout << "Elements of container " << containerType << ":" << std::endl;
-	for (const auto& element : container) {
-		std::cout << element << " ";
+void printContainer(const Container& cont, const std::string& contName) {
+	std::cout << "Container type: " << typeid(Container).name() << std::endl;
+	std::cout << "Container name: " << contName << std::endl;
+	std::cout << "Container elements: ";
+
+	for (const auto& elem : cont) {
+		std::cout << elem << " ";
 	}
-	std::cout << std::endl;
+
+	std::cout << std::endl << std::endl;
 }
 
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<std::vector<T>>& vv) {
+	for (const auto& innerVec : vv) {
+		for (const auto& element : innerVec) {
+			os << element << " ";
+		}
+		os << std::endl;
+	}
+	return os;
+}
+
+// Функция-предикат для удаления элементов меньше нуля
+bool isNegative(int x) {
+	return x < 0;
+}
 
 int main()
 {
@@ -271,6 +319,9 @@ int main()
 			std::cout << point << std::endl;
 		}
 
+		
+
+
 		// Освобождаем память, выделенную под объекты Point
 		for (auto& point : vpPoint) {
 			delete point;
@@ -353,6 +404,13 @@ int main()
 		}
 		std::cout << std::endl;
 
+
+		/*Использование функции reserve в стандартном контейнере std::vector целесообразно, когда мы заранее знаем ожидаемое количество элементов, которые будут храниться в векторе. Резервирование памяти позволяет избежать частых перевыделений памяти при добавлении элементов в вектор методом push_back. Это может быть особенно полезно при работе с большими объемами данных или в критических участках кода, где производительность имеет значение.
+
+Однако, в нашем конкретном случае использование reserve не является необходимым, так как мы добавляем всего 5 элементов в каждый из векторов. std::vector обычно умеет хорошо управлять памятью и автоматически увеличивает свою емкость по мере необходимости. Таким образом, в данном случае можно обойтись без явного вызова reserve.
+
+Кроме того, важно помнить, что capacity() не обязательно равна size(). capacity() отображает текущий размер выделенной памяти, в то время как size() отображает фактическое количество элементов в векторе.*/
+
 		
 
 
@@ -403,13 +461,9 @@ int main()
 			vv.push_back(std::vector<int>(i + 1, ar[i]));
 		}
 
-		// Выводим содержимое двумерного вектора по строкам
-		for (const auto& innerVec : vv) {
-			for (const auto& element : innerVec) {
-				std::cout << element << " ";
-			}
-			std::cout << std::endl;
-		}
+
+		// Вывод двумерного вектора с помощью оператора <<
+		std::cout << vv;
 
 
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -431,9 +485,11 @@ int main()
 			//Проверьте работоспособность функции - вставьте перед каждым элементом вектора vChar2 букву 'W'
 
 		std::vector<char> vChar2 = { 'a', 'b', 'c' };
-
+
+
 		insertIfNotExists(vChar2, 'a');
-
+
+
 		insertIfNotExists(vChar2, 'q');
 
 		// Выводим содержимое вектора после вставки
@@ -448,7 +504,7 @@ int main()
 			//Напишите функцию, которая должна удалять только повторяющиеся последовательности.
 			//Например: было - "qwerrrrty12222r3", стало - "qwety1r3"
 
-		std::string input = "qwerrrrty12222r3";
+		std::vector<char> input = { 'q', 'w', 'e', 'r', 'r', 'r', 'r', 't', 'y', '1', '2', '2', '2', '2', 'r', '3' };
 		std::string result = removeRepeatingSequences(input);
 
 		std::cout << "Before: " << input << std::endl;
@@ -470,12 +526,11 @@ int main()
 		removeDuplicates(vChar);
 
 		// Выводим содержимое вектора после удаления дубликатов
-		for (const auto& elem : vChar) {
-			std::cout << elem;
+		for (std::vector<char>::const_iterator it = vChar.begin(); it != vChar.end(); ++it) {
+			std::cout << *it;
 		}
 		std::cout << std::endl;
 
-		return 0;
 
 
 
@@ -530,7 +585,6 @@ int main()
 			//работала сортировка
 
 		std::list<Point> ptList1;
-
 		ptList1.push_back(Point(1, 1));
 		ptList1.push_front(Point(2, 2));
 		ptList1.insert(++ptList1.begin(), Point(3, 3));
@@ -551,18 +605,15 @@ int main()
 		printContainer(ptList2, "ptList2");
 
 		// Сортировка списков ptList1 и ptList2 по возрастанию
-		ptList1.sort([](const Point& p1, const Point& p2) { return p1.x < p2.x; });
-		ptList2.sort([](const Point& p1, const Point& p2) { return p1.x < p2.x; });
+		ptList1.sort();
+		ptList2.sort();
+
 
 		// Вывод отсортированных списков
 		std::cout << "After sorting ptList1:" << std::endl;
 		printContainer(ptList1, "ptList1");
 		std::cout << "After sorting ptList2:" << std::endl;
 		printContainer(ptList2, "ptList2");
-
-
-
-
 
 
 
@@ -585,12 +636,22 @@ int main()
 
 
 
+
+
+
 		//Исключение элемента из списка, удовлетворяющего заданному условию:
 		//любая из координат отрицательна - remove_if(). 
+		// Удаление элементов из списка, которые меньше нуля
 		std::list<int> myList_1 = { -1, 2, -3, 4, -5 };
-		myList_1.remove_if([](int x) { return x < 0; }); // Удаляет все элементы списка, которые меньше нуля
 
+		// Удаление элементов из списка, которые меньше нуля
+		myList_1.remove_if(isNegative);
 
+		// Вывод списка после удаления элементов
+		for (const auto& elem : myList_1) {
+			std::cout << elem << " ";
+		}
+		std::cout << std::endl;
 
 		//Исключение из списка подряд расположенных дублей - unique(). 
 		std::list<int> myList_2 = { 1, 2, 2, 3, 3, 3, 4, 4, 5 };
@@ -627,6 +688,39 @@ int main()
 		printContainer(pointDeque, "pointDeque");
 
 
+		std::deque<MyString> myDeque;
+
+		// Заполнение deque значениями с помощью push_back(), push_front(), insert()
+		myDeque.push_back(MyString("Apple"));
+		myDeque.push_back(MyString("Banana"));
+		myDeque.push_back(MyString("Carrot"));
+		myDeque.push_front(MyString("Ant"));
+		myDeque.push_front(MyString("Apricot"));
+		myDeque.insert(myDeque.begin() + 2, MyString("Avocado"));
+
+		// Вывод содержимого deque
+		std::cout << "Deque contents before erasing:" << std::endl;
+		for (const auto& str : myDeque) {
+			std::cout << str.get() << std::endl;
+		}
+		std::cout << std::endl;
+
+		// Удаление элементов из deque, в которых строчки начинаются с 'A' или 'a'
+		auto it = myDeque.begin();
+		while (it != myDeque.end()) {
+			if (it->get()[0] == 'A' || it->get()[0] == 'a') {
+				it = myDeque.erase(it);
+			}
+			else {
+				++it;
+			}
+		}
+
+		// Вывод содержимого deque после удаления
+		std::cout << "Deque contents after erasing:" << std::endl;
+		for (const auto& str : myDeque) {
+			std::cout << str.get() << std::endl;
+		}
 
 		return 0;
 }
